@@ -25,4 +25,11 @@ flutter:
 
   # Define the assets folder for images
   assets:
-    - lib/assets/1.png
+    - lib/assets/3.webp
+    - lib/assets/4.webp
+    - lib/assets/5.webp
+    - lib/assets/6.webp
+    - lib/assets/7.webp
+    - lib/assets/8.webp
+    - lib/assets/9.webp
+    - lib/assets/10.webp
