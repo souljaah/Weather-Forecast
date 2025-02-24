@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
-import 'consts.dart';  // Make sure you have your OPENWEATHER_API_KEY here
+import 'consts.dart'; // Make sure you have your OPENWEATHER_API_KEY here
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,19 +12,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final WeatherFactory _wf = WeatherFactory(OPENWEATHER_API_KEY);
-  List<Weather> _forecast = []; // Holds forecast data
+  List<Weather> _forecast = [];
   Weather? _currentWeather;
-  int _currentDateOffset = 0; // 0 = today, -1 = yesterday, +1 = tomorrow
+  int _currentDateOffset = 0;
 
-  // List of municipalities in Bohol
   final List<String> _municipalities = [
-    "\n\n\nTagbilaran City", "\n\n\nPilar", "\n\n\nDimiao", "\n\n\nGuindulman", "\n\n\nAlburquerque", "\n\n\nAlicia", "\n\n\nAntequera", "\n\n\nBaclayon", "\n\n\nBalilihan", "\n\n\nBatuan",
-    "\n\n\nBien Unido", "\n\n\nBilar", "\n\n\nBuenavista", "\n\n\nCalape", "\n\n\nCandijay", "\n\n\nCarmen", "\n\n\nCatigbian",
-    "\n\n\nClarin", "\n\n\nCorella", "\n\n\nCortes", "\n\n\nDagohoy", "\n\n\nDuero", "\n\n\nDanao",
-    "\n\n\nGarcia Hernandez", "\n\n\nGetafe", "\n\n\nInabanga", "\n\n\nJagna", "\n\n\nLila", "\n\n\nLoay",
-    "\n\n\nLoboc", "\n\n\nLoon", "\n\n\nMabini", "\n\n\nMaribojoc", "\n\n\nDauis", "\n\n\nAnda",
-    "\n\n\nSagbayan", "\n\n\nSan Isidro", "\n\n\nSan Miguel", "\n\n\nSevilla", "\n\n\nSierra Bullones", "\n\n\nSikatuna",
-    "\n\n\nTalibon", "\n\n\nTrinidad", "\n\n\nTubigon", "\n\n\nUbay", "\n\n\nValencia", "\n\n\nBien Unido"
+    "Tagbilaran City", "Pilar", "Dimiao", "Guindulman", "Alburquerque", "Alicia", "Antequera", "Baclayon", "Balilihan", "Batuan",
+    "Bien Unido", "Bilar", "Buenavista", "Calape", "Candijay", "Carmen", "Catigbian", "Clarin", "Corella", "Cortes",
+    "Dagohoy", "Duero", "Danao", "Garcia Hernandez", "Getafe", "Inabanga", "Jagna", "Lila", "Loay", "Loboc", "Loon",
+    "Mabini", "Maribojoc", "Dauis", "Anda", "Sagbayan", "San Isidro", "San Miguel", "Sevilla", "Sierra Bullones", "Sikatuna",
+    "Talibon", "Trinidad", "Tubigon", "Ubay", "Valencia", "Bien Unido"
   ];
 
   int _currentMunicipalityIndex = 0;
@@ -32,15 +29,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchWeatherForecast(); // Fetch weather forecast for the first municipality (default)
+    _fetchWeatherForecast(_municipalities[_currentMunicipalityIndex]);
   }
 
-  // Fetch weather forecast for the current municipality
-  Future<void> _fetchWeatherForecast() async {
+  Future<void> _fetchWeatherForecast(String cityName) async {
     try {
-      // Get 7-day forecast
-      List<Weather> forecast = await _wf.fiveDayForecastByCityName(_municipalities[_currentMunicipalityIndex]);
-      Weather currentWeather = forecast[0]; // Assume first entry is current day
+      List<Weather> forecast = await _wf.fiveDayForecastByCityName(cityName);
+      Weather currentWeather = forecast[0];
 
       setState(() {
         _forecast = forecast;
@@ -55,33 +50,49 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Navigate to the next municipality
-  void _nextMunicipality() {
+  void _onMunicipalitySelected(String municipality) {
     setState(() {
-      _currentMunicipalityIndex = (_currentMunicipalityIndex + 1) % _municipalities.length;
+      _currentMunicipalityIndex = _municipalities.indexOf(municipality);
     });
-    _fetchWeatherForecast();
-  }
-
-  // Navigate to the previous municipality
-  void _previousMunicipality() {
-    setState(() {
-      _currentMunicipalityIndex = (_currentMunicipalityIndex - 1 + _municipalities.length) % _municipalities.length;
-    });
-    _fetchWeatherForecast();
-  }
-
-  // Navigate to the next day or previous day
-  void _changeDay(int offset) {
-    setState(() {
-      _currentDateOffset += offset;
-    });
+    _fetchWeatherForecast(municipality);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildUI(),
+      extendBodyBehindAppBar: true, // Extend the body behind the AppBar
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, // Make the AppBar transparent
+        elevation: 0, // Remove shadow or elevation
+        title: const Text(
+          "Search City", // Changed from "Weather Forecast" to "Search City"
+          style: TextStyle(color: Colors.black),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.black),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: MunicipalitySearchDelegate(
+                  municipalities: _municipalities,
+                  onMunicipalitySelected: _onMunicipalitySelected,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            // Provide a fallback for when _currentWeather or weatherDescription is null
+            image: AssetImage(_getBackgroundImage(_currentWeather?.weatherDescription ?? "default")),
+            fit: BoxFit.cover, // Ensure background image covers the entire screen
+          ),
+        ),
+        child: _buildUI(),
+      ),
     );
   }
 
@@ -92,85 +103,83 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // Get current weather or forecasted weather based on the selected date
     Weather weather = _getWeatherForSelectedDate();
+    String backgroundImage = _getBackgroundImage(weather.weatherDescription ?? "default");
 
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _locationHeader(),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.08,
+    return Stack(
+      children: [
+        // Background Image
+        SizedBox(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          child: Image.asset(
+            backgroundImage,
+            fit: BoxFit.cover,
           ),
-          _dateTimeInfo(), // Shows current date and time
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.05,
-          ),
-          _weatherIcon(weather),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.02,
-          ),
-          _currentTemp(weather),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.02,
-          ),
-          _extraInfo(weather),
-          SizedBox(height: 20),
-          _navigationButtons(), // Add the Next/Back buttons for municipalities
-          SizedBox(height: 10),
-          _dateNavigationButtons(), // Add the Previous Day/Next Day buttons
-        ],
-      ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Add a SizedBox to create space between the AppBar and the city name
+            SizedBox(height: MediaQuery.of(context).size.height * 0.10),
+
+            // City Name Header (placed moderately down)
+            _locationHeader(),
+
+            // Additional Spacing after city name
+            SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+
+            // Date and Time Information
+            _dateTimeInfo(),
+
+            // Weather icon, temperature, and additional information
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+            _weatherIcon(weather),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            _currentTemp(weather),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+            _extraInfo(weather),
+
+            // Navigation buttons to navigate through days
+            SizedBox(height: 80),
+            _dateNavigationButtons(),
+          ],
+        ),
+      ],
     );
   }
 
   Weather _getWeatherForSelectedDate() {
-    int index = (_currentDateOffset + _forecast.length) % _forecast.length; // Adjust date offset
+    int index = (_currentDateOffset + _forecast.length) % _forecast.length;
     return _forecast[index];
   }
 
   Widget _locationHeader() {
     return Text(
-      _municipalities[_currentMunicipalityIndex], // Display current municipality
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w500,
-      ),
+      _municipalities[_currentMunicipalityIndex],
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
     );
   }
 
   Widget _dateTimeInfo() {
-    DateTime now = DateTime.now().add(Duration(days: _currentDateOffset)); // Adjust for past/future dates
+    DateTime now = DateTime.now().add(Duration(days: _currentDateOffset));
     return Column(
       children: [
         Text(
-          DateFormat("h:mm a").format(now), // Show time in hours and minutes
-          style: const TextStyle(
-            fontSize: 35,
-          ),
+          DateFormat("h:mm a").format(now),
+          style: const TextStyle(fontSize: 35),
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         Row(
-          mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              DateFormat("EEEE").format(now), // Show the day of the week
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-              ),
+              DateFormat("EEEE").format(now),
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             Text(
-              "  ${DateFormat("d/MM/y").format(now)}", // Show the date
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-              ),
+              "  ${DateFormat("d/MM/y").format(now)}",
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -180,25 +189,19 @@ class _HomePageState extends State<HomePage> {
 
   Widget _weatherIcon(Weather weather) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: NetworkImage(
-                  "http://openweathermap.org/img/wn/${weather.weatherIcon}@4x.png"),
+              image: NetworkImage("http://openweathermap.org/img/wn/${weather.weatherIcon}@4x.png"),
             ),
           ),
         ),
         Text(
           weather.weatherDescription ?? "",
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-          ),
-        )
+          style: const TextStyle(color: Colors.black, fontSize: 20),
+        ),
       ],
     );
   }
@@ -206,11 +209,7 @@ class _HomePageState extends State<HomePage> {
   Widget _currentTemp(Weather weather) {
     return Text(
       "${weather.temperature?.celsius?.toStringAsFixed(0)}°C",
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 90,
-        fontWeight: FontWeight.w500,
-      ),
+      style: const TextStyle(color: Colors.black, fontSize: 90, fontWeight: FontWeight.w500),
     );
   }
 
@@ -225,48 +224,19 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.all(8.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
-            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                "Wind: ${weather.windSpeed?.toStringAsFixed(0)}m/s",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
-              ),
-              Text(
-                "Humidity: ${weather.humidity?.toStringAsFixed(0)}%",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
-              ),
+              Text("Wind: ${weather.windSpeed?.toStringAsFixed(0)}m/s", style: const TextStyle(color: Colors.white, fontSize: 15)),
+              Text("Humidity: ${weather.humidity?.toStringAsFixed(0)}%", style: const TextStyle(color: Colors.white, fontSize: 15)),
             ],
           ),
           Row(
-            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                "Max: ${weather.tempMax?.celsius?.toStringAsFixed(0)}°C",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
-              ),
-              Text(
-                "Min: ${weather.tempMin?.celsius?.toStringAsFixed(0)}°C",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
-              ),
+              Text("Max: ${weather.tempMax?.celsius?.toStringAsFixed(0)}°C", style: const TextStyle(color: Colors.white, fontSize: 15)),
+              Text("Min: ${weather.tempMin?.celsius?.toStringAsFixed(0)}°C", style: const TextStyle(color: Colors.white, fontSize: 15)),
             ],
           ),
         ],
@@ -274,24 +244,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Navigation buttons for Next and Back (municipalities)
-  Widget _navigationButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        ElevatedButton(
-          onPressed: _previousMunicipality,
-          child: const Text("Back"),
-        ),
-        ElevatedButton(
-          onPressed: _nextMunicipality,
-          child: const Text("Next"),
-        ),
-      ],
-    );
-  }
-
-  // Navigation buttons for changing the date (yesterday, today, tomorrow, etc.)
   Widget _dateNavigationButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -305,6 +257,89 @@ class _HomePageState extends State<HomePage> {
           child: const Text("Next Day"),
         ),
       ],
+    );
+  }
+
+  void _changeDay(int offset) {
+    setState(() {
+      _currentDateOffset += offset;
+    });
+  }
+
+  // This function returns the correct background image based on weather description
+  String _getBackgroundImage(String weatherDescription) {
+    switch (weatherDescription.toLowerCase()) {
+      case 'light rain':
+        return 'lib/assets/4.webp'; // Use your local path to the image
+      case 'overcast clouds':
+        return 'lib/assets/5.webp'; // Use your local path to the image
+      case 'clear sky':
+        return 'lib/assets/6.webp'; // Use your local path to the image
+      case 'few clouds':
+        return 'lib/assets/8.webp';
+      case 'scattered clouds':
+        return 'lib/assets/9.webp';
+      case 'broken clouds':
+        return 'lib/assets/10.webp';
+      default:
+        return 'lib/assets/7.webp'; // Default weather background
+    }
+  }
+}
+
+class MunicipalitySearchDelegate extends SearchDelegate<String> {
+  final List<String> municipalities;
+  final Function(String) onMunicipalitySelected;
+
+  MunicipalitySearchDelegate({
+    required this.municipalities,
+    required this.onMunicipalitySelected,
+  });
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return const SizedBox();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = municipalities
+        .where((municipality) => municipality.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(suggestions[index]),
+          onTap: () {
+            onMunicipalitySelected(suggestions[index]);
+            close(context, suggestions[index]);
+          },
+        );
+      },
     );
   }
 }
