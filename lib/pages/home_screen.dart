@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
             height: double.infinity,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('lib/assets/1.png'),  // Correct image path
+                image: AssetImage('lib/assets/3.webp'),  // Correct image path
                 fit: BoxFit.cover,  // Ensure the image covers the whole screen
               ),
             ),
