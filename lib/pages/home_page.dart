@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
-import 'consts.dart'; // Make sure you have your OPENWEATHER_API_KEY here
+import 'consts.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,10 +60,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // Extend the body behind the AppBar
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Make the AppBar transparent
-        elevation: 0, // Remove shadow or elevation
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           "Search City", // Changed from "Weather Forecast" to "Search City"
           style: TextStyle(color: Colors.black),
