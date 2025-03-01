@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
           image: DecorationImage(
             // Provide a fallback for when _currentWeather or weatherDescription is null
             image: AssetImage(_getBackgroundImage(_currentWeather?.weatherDescription ?? "default")),
-            fit: BoxFit.cover, // Ensure background image covers the entire screen
+            fit: BoxFit.cover,
           ),
         ),
         child: _buildUI(),
